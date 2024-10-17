@@ -1,0 +1,69 @@
+esphome:
+  name: ${device_name}-${device_board}-${device_number}
+  friendly_name: ${friendly_name}
+  comment: ${comment}
+  project:
+    name: ${project_author}.${device_name}-${device_board}
+    version: ${project_version}
+
+select:
+  - platform: template
+    name: "External switch mode"
+    id: select_external_switch_mode
+    icon: "mdi:repeat"
+    options:
+      - Button
+      - Switch
+      - Detach
+    optimistic: true
+    restore_value: true
+    entity_category: "config"
+
+switch:
+  - platform: output
+    name: "Relay"
+    id: switch_onboard_relay
+    output: output_relay
+    on_turn_on:
+      then:
+        - output.turn_on: output_onboard_led
+    on_turn_off:
+      then:
+        - output.turn_off: output_onboard_led
+
+binary_sensor:
+
+  # Кнопка на плате
+  - id: !extend binary_sensor_onboard_button
+    on_press:
+      - switch.toggle:
+          id: switch_onboard_relay
+    filters:
+      #- invert:
+      - delayed_on: 20ms
+
+  # Внешний выключатель
+  - id: !extend binary_sensor_external_switch
+    filters:
+      #- invert:
+      - delayed_on: 20ms
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(select_external_switch_mode).state == "Button";'
+          then:
+            - switch.toggle:
+                id: switch_onboard_relay
+      - if:
+          condition:
+            lambda: 'return id(select_external_switch_mode).state == "Switch";'
+          then:
+            - switch.turn_on:
+                id: switch_onboard_relay
+    on_release:
+      - if:
+          condition:
+            lambda: 'return id(select_external_switch_mode).state == "Switch";'
+          then:
+            - switch.turn_off:
+                id: switch_onboard_relay
