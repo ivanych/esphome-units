@@ -13,7 +13,7 @@ select:
     icon: "mdi:repeat"
     options:
       - Button
-      - Switch
+      - Rocker
       - Detach
     optimistic: true
     restore_value: true
