@@ -13,7 +13,7 @@ select:
     icon: "mdi:repeat"
     options:
       - Button
-      - Switch
+      - Rocker
       - Detach
     optimistic: true
     restore_value: true
@@ -56,14 +56,14 @@ binary_sensor:
                 id: switch_onboard_relay
       - if:
           condition:
-            lambda: 'return id(select_external_switch_mode).state == "Switch";'
+            lambda: 'return id(select_external_switch_mode).state == "Rocker";'
           then:
             - switch.turn_on:
                 id: switch_onboard_relay
     on_release:
       - if:
           condition:
-            lambda: 'return id(select_external_switch_mode).state == "Switch";'
+            lambda: 'return id(select_external_switch_mode).state == "Rocker";'
           then:
             - switch.turn_off:
                 id: switch_onboard_relay
