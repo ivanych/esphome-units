@@ -1,0 +1,79 @@
+select:
+  - platform: template
+    name: "External switch mode"
+    id: select_external_switch_mode
+    icon: "mdi:repeat"
+    options:
+      - Button
+      - Rocker
+      - Detach
+    optimistic: true
+    restore_value: true
+    entity_category: "config"
+
+switch:
+  - platform: output
+    name: "Relay 1"
+    id: switch_onboard_relay_1
+    output: output_relay_1
+
+  - platform: output
+    name: "Relay 2"
+    id: switch_onboard_relay_2
+    output: output_relay_2
+
+binary_sensor:
+
+  # Кнопка на плате
+  - id: !extend binary_sensor_onboard_button
+    on_press:
+      - switch.toggle:
+          id: switch_onboard_relay_1
+      - switch.toggle:
+          id: switch_onboard_relay_2
+
+  # Внешний выключатель 1
+  - id: !extend binary_sensor_external_switch_1
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(select_external_switch_mode).state == "Button";'
+          then:
+            - switch.toggle:
+                id: switch_onboard_relay_1
+      - if:
+          condition:
+            lambda: 'return id(select_external_switch_mode).state == "Rocker";'
+          then:
+            - switch.turn_on:
+                id: switch_onboard_relay_1
+    on_release:
+      - if:
+          condition:
+            lambda: 'return id(select_external_switch_mode).state == "Rocker";'
+          then:
+            - switch.turn_off:
+                id: switch_onboard_relay_1
+
+  # Внешний выключатель 2
+  - id: !extend binary_sensor_external_switch_2
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(select_external_switch_mode).state == "Button";'
+          then:
+            - switch.toggle:
+                id: switch_onboard_relay_2
+      - if:
+          condition:
+            lambda: 'return id(select_external_switch_mode).state == "Rocker";'
+          then:
+            - switch.turn_on:
+                id: switch_onboard_relay_2
+    on_release:
+      - if:
+          condition:
+            lambda: 'return id(select_external_switch_mode).state == "Rocker";'
+          then:
+            - switch.turn_off:
+                id: switch_onboard_relay_2
