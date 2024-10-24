@@ -1,10 +1,4 @@
-esphome:
-  name: ${device_name}-${device_board}-${device_number}
-  friendly_name: ${friendly_name}
-  comment: ${comment}
-  project:
-    name: ${project_author}.${device_name}-${device_board}
-    version: ${project_version}
+# Реле на основе Sonoff MINIR4
 
 select:
   - platform: template
