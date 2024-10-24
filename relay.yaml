@@ -32,15 +32,9 @@ binary_sensor:
     on_press:
       - switch.toggle:
           id: switch_onboard_relay
-    filters:
-      #- invert:
-      - delayed_on: 20ms
 
   # Внешний выключатель
   - id: !extend binary_sensor_external_switch
-    filters:
-      #- invert:
-      - delayed_on: 20ms
     on_press:
       - if:
           condition:
