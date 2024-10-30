@@ -1,0 +1,13 @@
+# Реле с индикатором
+
+switch:
+  - platform: output
+    name: "Relay"
+    id: switch_onboard_relay
+    output: output_relay
+    on_turn_on:
+      then:
+        - output.turn_on: output_onboard_led
+    on_turn_off:
+      then:
+        - output.turn_off: output_onboard_led
