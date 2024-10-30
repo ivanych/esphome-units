@@ -1,4 +1,7 @@
-# Реле с индикатором
+# Реле с одним каналом
+
+substitutions:
+  unit_name: "relay-1c"
 
 switch:
   - platform: output

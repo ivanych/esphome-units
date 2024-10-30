@@ -1,3 +1,8 @@
+# Реле с двумя каналами, кнопкой и внешними выключателями
+
+substitutions:
+  unit_name: "relay-2p"
+
 select:
   - platform: template
     name: "External switch mode"
