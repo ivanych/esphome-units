@@ -1,7 +1,7 @@
 # Реле с одним каналом, кнопкой и внешним выключателем
 
 substitutions:
-  unit_name: "relay-1p"
+  unit_name: "relay-1m"
 
 select:
   - platform: template
