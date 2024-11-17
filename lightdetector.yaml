@@ -1,0 +1,16 @@
+# Детектор света
+
+substitutions:
+  unit_name: "lightdetector"
+
+binary_sensor:
+
+  # Сработка сенсора индицируется диодом на плате
+  - id: !extend binary_sensor_switch
+    name: "Light"
+    on_press:
+      then:
+        - output.turn_on: output_onboard_led
+    on_release:
+      then:
+        - output.turn_off: output_onboard_led
