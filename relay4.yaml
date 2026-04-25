@@ -1,0 +1,25 @@
+# Реле с одним каналом, кнопкой и светодиодом (интерфейс Relay4)
+
+substitutions:
+  unit_name: "relay4"
+
+switch:
+  # Выключатель реле включает и выключает реле
+  # и одновременно включает и выключает светодиод для индикации работы реле.
+  - platform: output
+    name: "Relay"
+    id: switch_onboard_relay
+    output: output_relay
+    on_turn_on:
+      then:
+        - output.turn_on: output_onboard_led
+    on_turn_off:
+      then:
+        - output.turn_off: output_onboard_led
+
+binary_sensor:
+  # Добавляем поведение кнопке — нажатие кнопки переключает выключатель реле
+  - id: !extend binary_sensor_onboard_button
+    on_press:
+      - switch.toggle:
+          id: switch_onboard_relay
