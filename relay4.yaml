@@ -3,6 +3,84 @@
 substitutions:
   unit_name: "relay4"
 
+esphome:
+  on_boot:
+    - priority: 600
+      then:
+        - logger.log:
+            format: "priority: 600"
+            tag: "on_boot"
+
+        # Устанавливаем флаг "Выполнена загрузка?"
+        - globals.set:
+            id: globals_is_boot
+            value: 'true'
+        - logger.log:
+            format: "globals.set: globals_is_boot(true)"
+            tag: "on_boot"
+
+        # Включаем/выключаем реле в зависимости от настройки Power-On State
+        - if:
+            condition:
+              select.is:
+                id: select_power_on_state
+                options: "On"
+            then:
+              - logger.log:
+                  format: "select_power_on_state == On; --> ⏻ switch.turn_on: switch_onboard_relay"
+                  tag: "on_boot"
+              - switch.turn_on: switch_onboard_relay
+            else:
+              - if:
+                  condition:
+                    select.is:
+                      id: select_power_on_state
+                      options: "Off"
+                  then:
+                    - logger.log:
+                        format: "select_power_on_state == Off; --> ⏻ switch.turn_off: switch_onboard_relay"
+                        tag: "on_boot"
+                    - switch.turn_off: switch_onboard_relay
+                  else:
+                    - logger.log:
+                        format: "select_power_on_state != On|Off; --> check globals_last_state"
+                        tag: "on_boot"
+                    - logger.log:
+                        format: "globals_last_state == %s (c_str: %s)"
+                        args: [ 'id(globals_last_state)', 'id(globals_last_state).c_str()', ]
+                        tag: "on_boot"
+                    - if:
+                        condition:
+                          lambda: |
+                            return id(globals_last_state) == "On";
+                        then:
+                          - logger.log:
+                              format: "globals_last_state == On; --> ⏻ switch.turn_on: switch_onboard_relay"
+                              tag: "on_boot"
+                          - switch.turn_on: switch_onboard_relay
+                        else:
+                          - if:
+                              condition:
+                                lambda: |
+                                  return id(globals_last_state) == "Off";
+                              then:
+                                - logger.log:
+                                    format: "globals_last_state == Off; --> ⏻ switch.turn_off: switch_onboard_relay"
+                                    tag: "on_boot"
+                                - switch.turn_off: switch_onboard_relay
+
+globals:
+  # Выполнена загрузка?
+  - id: globals_is_boot
+    type: bool
+    initial_value: 'false'
+
+  # Последнее состояние (On|Off)
+  - id: globals_last_state
+    type: std::string
+    restore_value: yes
+    initial_value: '"Off"'
+
 switch:
   # Выключатель реле включает и выключает реле
   # и одновременно включает и выключает светодиод для индикации работы реле.
@@ -11,11 +89,49 @@ switch:
     id: switch_onboard_relay
     output: output_relay
     on_turn_on:
-      then:
-        - output.turn_on: output_onboard_led
+      - logger.log:
+          format: "on_turn_on"
+          tag: "switch"
+      - if:
+          condition:
+            lambda: 'return id(globals_is_boot);'
+          then:
+            - logger.log:
+                format: "globals_is_boot == true; --> ✅ exec on_turn_on"
+                tag: "switch"
+            - output.turn_on: output_onboard_led
+            - globals.set:
+                id: globals_last_state
+                value: '"On"'
+            - text_sensor.template.publish:
+                id: text_sensor_last_state
+                state: "On"
+          else:
+            - logger.log:
+                format: "globals_is_boot == false; --> ❌ skip on_turn_on!"
+                tag: "switch"
     on_turn_off:
-      then:
-        - output.turn_off: output_onboard_led
+      - logger.log:
+          format: "on_turn_off"
+          tag: "switch"
+      - if:
+          condition:
+            lambda: 'return id(globals_is_boot);'
+          then:
+            - logger.log:
+                format: "globals_is_boot == true; --> ✅ exec on_turn_off"
+                tag: "switch"
+            - output.turn_off: output_onboard_led
+            - globals.set:
+                id: globals_last_state
+                value: '"Off"'
+            - text_sensor.template.publish:
+                id: text_sensor_last_state
+                state: "Off"
+          else:
+            - logger.log:
+                format: "globals_is_boot == false; --> ❌ skip on_turn_off!"
+                tag: "switch"
 
 binary_sensor:
   # Добавляем поведение кнопке — нажатие кнопки переключает выключатель реле
@@ -23,3 +139,34 @@ binary_sensor:
     on_press:
       - switch.toggle:
           id: switch_onboard_relay
+
+  - platform: template
+    name: "Is Boot?"
+    id: binary_sensor_globals_is_boot
+    icon: mdi:upload
+    entity_category: diagnostic
+    lambda: 'return id(globals_is_boot);'
+
+text_sensor:
+  # Последнее состояние
+  - platform: template
+    name: "Last State"
+    id: text_sensor_last_state
+    icon: mdi:power
+    entity_category: diagnostic
+    lambda: 'return {id(globals_last_state)};'
+
+select:
+  # Состояние после восстановления питания
+  - platform: template
+    name: "Power-On State"
+    id: select_power_on_state
+    icon: mdi:power-settings
+    options:
+      - "Off"
+      - "On"
+      - "Last State"
+    initial_option: "Off"
+    optimistic: true
+    restore_value: true
+    entity_category: config
