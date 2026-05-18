@@ -134,18 +134,19 @@ switch:
                 tag: "switch"
 
 binary_sensor:
-  # Добавляем поведение кнопке — нажатие кнопки переключает выключатель реле
-  - id: !extend binary_sensor_onboard_button
-    on_press:
-      - switch.toggle:
-          id: switch_onboard_relay
-
+  # Индикатор выполненной загрузки
   - platform: template
     name: "Is Boot?"
     id: binary_sensor_globals_is_boot
     icon: mdi:upload
     entity_category: diagnostic
     lambda: 'return id(globals_is_boot);'
+
+  # Добавляем поведение кнопке — нажатие кнопки переключает выключатель реле
+  - id: !extend binary_sensor_onboard_button
+    on_press:
+      - switch.toggle:
+          id: switch_onboard_relay
 
 text_sensor:
   # Последнее состояние
