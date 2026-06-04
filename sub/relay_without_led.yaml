@@ -1,0 +1,62 @@
+# Реле без светодиода
+#
+# Управляемые объекты:
+#   - Переключатель реле  (switch_relay)
+# Требует управляемые объекты:
+#   - Реле                      (output_relay)
+#   TODO надо убрать здесь зависимость от флага,
+#        обращение к флагу нужно инжектить сюда из relay_pos
+#   - Флаг выполненной загрузки (globals_is_boot)
+
+substitutions:
+  number: 1
+
+switch:
+  # Переключатель реле
+  # Включает и выключает реле и одновременно включает и выключает светодиод для индикации работы реле
+  - platform: output
+    name: "Relay ${number}"
+    id: switch_relay_${number}
+    output: output_relay_${number}
+    on_turn_on:
+      - logger.log:
+          format: "on_turn_on"
+          tag: "switch"
+      - if:
+          condition:
+            lambda: 'return id(globals_is_boot);'
+          then:
+            - logger.log:
+                format: "globals_is_boot == true; --> ✅ exec on_turn_on"
+                tag: "switch"
+            - globals.set:
+                id: globals_last_state_${number}
+                value: '"On"'
+            - text_sensor.template.publish:
+                id: text_sensor_last_state_${number}
+                state: "On"
+          else:
+            - logger.log:
+                format: "globals_is_boot == false; --> ❌ skip on_turn_on!"
+                tag: "switch"
+    on_turn_off:
+      - logger.log:
+          format: "on_turn_off"
+          tag: "switch"
+      - if:
+          condition:
+            lambda: 'return id(globals_is_boot);'
+          then:
+            - logger.log:
+                format: "globals_is_boot == true; --> ✅ exec on_turn_off"
+                tag: "switch"
+            - globals.set:
+                id: globals_last_state_${number}
+                value: '"Off"'
+            - text_sensor.template.publish:
+                id: text_sensor_last_state_${number}
+                state: "Off"
+          else:
+            - logger.log:
+                format: "globals_is_boot == false; --> ❌ skip on_turn_off!"
+                tag: "switch"

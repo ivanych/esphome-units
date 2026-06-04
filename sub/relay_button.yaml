@@ -1,0 +1,17 @@
+# Кнопка реле
+#
+# Управляемые объекты:
+#   - нет
+# Требует управляемые объекты:
+#   - Кнопка              (binary_sensor_button)
+#   - Переключатель реле  (switch_relay)
+
+substitutions:
+  number: 1
+
+binary_sensor:
+  # Добавляем поведение кнопке — нажатие кнопки переключает переключатель реле.
+  - id: !extend binary_sensor_button_${number}
+    on_press:
+      - switch.toggle:
+          id: switch_relay_${number}
