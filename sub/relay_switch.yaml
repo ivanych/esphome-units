@@ -1,0 +1,56 @@
+# Выключатель реле
+#
+# Управляемые объекты:
+#   - Селектор режима работы выключателя  (select_switch_mode)
+# Требует управляемые объекты:
+#   - Выключатель         (binary_sensor_switch)
+#   - Переключатель реле  (switch_relay)
+
+substitutions:
+  number: 1
+
+binary_sensor:
+  # Добавляем поведение выключателю — несколько разных режимов включения реле
+  - id: !extend binary_sensor_switch_${number}
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(select_switch_mode_${number}).current_option() == "Button";'
+          then:
+            - switch.toggle:
+                id: switch_relay_${number}
+      - if:
+          condition:
+            lambda: 'return id(select_switch_mode_${number}).current_option() == "Rocker";'
+          then:
+            - switch.turn_on:
+                id: switch_relay_${number}
+      - if:
+          condition:
+            lambda: 'return id(select_switch_mode_${number}).current_option() == "Detach";'
+          then:
+            - logger.log:
+                format: "select_switch_mode_${number} == Detach; --> ❌ skip on_press!"
+                tag: "binary_sensor"
+    on_release:
+      - if:
+          condition:
+            lambda: 'return id(select_switch_mode_${number}).current_option() == "Rocker";'
+          then:
+            - switch.turn_off:
+                id: switch_relay_${number}
+
+select:
+  # Режим работы выключателя
+  - platform: template
+    name: "Switch ${number} Mode"
+    id: select_switch_mode_${number}
+    icon: mdi:repeat
+    options:
+      - "Button"
+      - "Rocker"
+      - "Detach"
+    initial_option: "Rocker"
+    optimistic: true
+    restore_value: true
+    entity_category: config

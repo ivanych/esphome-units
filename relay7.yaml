@@ -1,0 +1,40 @@
+# Relay7
+# Реле с двумя каналами, одной кнопкой  и двумя выключателями
+
+substitutions:
+  friendly_unit_name: "Relay7"
+
+packages:
+  # Реле без светодиода 1
+  relay_1: !include
+    file: sub/relay_without_led.yaml
+
+  # Реле без светодиода 2
+  relay_2: !include
+    file: sub/relay_without_led.yaml
+    vars:
+      number: 2
+
+  # Кнопка двойного реле
+  relay_button: !include
+    file: sub/relay_button2.yaml
+
+  # Выключатель реле 1
+  relay_switch_1: !include
+    file: sub/relay_switch.yaml
+
+  # Выключатель реле 2
+  relay_switch_2: !include
+    file: sub/relay_switch.yaml
+    vars:
+      number: 2
+
+  # Функция восстановления состояния реле 1
+  relay_pos_1: !include
+    file: sub/relay_pos.yaml
+
+  # Функция восстановления состояния реле 2
+  relay_pos_2: !include
+    file: sub/relay_pos.yaml
+    vars:
+      number: 2

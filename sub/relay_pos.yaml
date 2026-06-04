@@ -1,0 +1,103 @@
+# Функция восстановления состояния реле после потери питания (Power-On State)
+#
+# Управляемые объекты:
+#   - Cелектор состояния после восстановления питания (select_power_on_state)
+# Неуправляемые объекты:
+#   - Индикатор последнего состояния
+# Требует управляемые объекты:
+#   - Переключатель реле  (switch_relay)
+#
+# Параметры:
+#   number (опционально, int):  номер реле (1)
+
+substitutions:
+  number: 1
+
+globals:
+  # Последнее состояние (On|Off)
+  - id: globals_last_state_${number}
+    type: std::string
+    restore_value: yes
+    initial_value: '"Off"'
+
+esphome:
+  on_boot:
+    - priority: 600
+      then:
+        - logger.log:
+            format: "priority: 600"
+            tag: "on_boot"
+
+        # Включаем/выключаем реле в зависимости от настройки Power-On State
+        - if:
+            condition:
+              select.is:
+                id: select_power_on_state_${number}
+                options: "On"
+            then:
+              - logger.log:
+                  format: "  select_power_on_state_${number} == On; --> ⏻ switch.turn_on: switch_relay_${number}"
+                  tag: "on_boot"
+              - switch.turn_on: switch_relay_${number}
+            else:
+              - if:
+                  condition:
+                    select.is:
+                      id: select_power_on_state_${number}
+                      options: "Off"
+                  then:
+                    - logger.log:
+                        format: "  select_power_on_state_${number} == Off; --> ⏻ switch.turn_off: switch_relay_${number}"
+                        tag: "on_boot"
+                    - switch.turn_off: switch_relay_${number}
+                  else:
+                    - logger.log:
+                        format: "  select_power_on_state_${number} != On|Off; --> check globals_last_state_${number}"
+                        tag: "on_boot"
+                    - logger.log:
+                        format: "  globals_last_state_${number} == %s (c_str: %s)"
+                        args: [ 'id(globals_last_state_${number})', 'id(globals_last_state_${number}).c_str()', ]
+                        tag: "on_boot"
+                    - if:
+                        condition:
+                          lambda: |
+                            return id(globals_last_state_${number}) == "On";
+                        then:
+                          - logger.log:
+                              format: "  globals_last_state_${number} == On; --> ⏻ switch.turn_on: switch_relay_${number}"
+                              tag: "on_boot"
+                          - switch.turn_on: switch_relay_${number}
+                        else:
+                          - if:
+                              condition:
+                                lambda: |
+                                  return id(globals_last_state_${number}) == "Off";
+                              then:
+                                - logger.log:
+                                    format: "  globals_last_state_${number} == Off; --> ⏻ switch.turn_off: switch_relay_${number}"
+                                    tag: "on_boot"
+                                - switch.turn_off: switch_relay_${number}
+
+select:
+  # Состояние реле после восстановления питания
+  - platform: template
+    name: "Relay ${number} Power-On State"
+    id: select_power_on_state_${number}
+    icon: mdi:power-settings
+    options:
+      - "Off"
+      - "On"
+      - "Last State"
+    initial_option: "Off"
+    optimistic: true
+    restore_value: true
+    entity_category: config
+
+text_sensor:
+  # Индикатор последнего состояния реле
+  - platform: template
+    name: "Relay ${number} Last State "
+    id: text_sensor_last_state_${number}
+    icon: mdi:power
+    entity_category: diagnostic
+    lambda: 'return {id(globals_last_state_${number})};'

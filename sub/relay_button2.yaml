@@ -1,0 +1,31 @@
+# Кнопка двойного реле
+#
+# Управляемые объекты:
+#   - нет
+# Требует управляемые объекты:
+#   - Кнопка              (binary_sensor_button)
+#   - Переключатель реле  (switch_relay) [1,2]
+
+substitutions:
+  number: 1
+
+binary_sensor:
+  # Добавляем поведение кнопке — нажатие кнопки переключает переключатель реле.
+  # При этом, если если хоть один переключатель включен, сначала выключает оба.
+  - id: !extend binary_sensor_button_${number}
+    on_press:
+      if:
+        condition:
+          switch.is_on: switch_relay_1
+        then:
+          - switch.turn_off: switch_relay_1
+          - switch.turn_off: switch_relay_2
+        else:
+          - if:
+              condition:
+                switch.is_on: switch_relay_2
+              then:
+                - switch.turn_off: switch_relay_2
+              else:
+                - switch.turn_on: switch_relay_1
+                - switch.turn_on: switch_relay_2
