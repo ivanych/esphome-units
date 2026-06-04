@@ -5,11 +5,11 @@ substitutions:
   friendly_unit_name: "Relay7"
 
 packages:
-  # Реле 1
+  # Реле без светодиода 1
   relay_1: !include
     file: sub/relay_without_led.yaml
 
-  # Реле 2
+  # Реле без светодиода 2
   relay_2: !include
     file: sub/relay_without_led.yaml
     vars:
