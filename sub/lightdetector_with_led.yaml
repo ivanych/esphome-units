@@ -1,0 +1,22 @@
+# Датчик света со светодиодом
+#
+# Управляемые объекты:
+#   - нет
+# Требует управляемые объекты:
+#   - Датчик света  (binary_sensor_lightdetector)
+#   - Светодиод     (output_led)
+# Параметры:
+#   number (опционально, int):  номер датчика света (1)
+
+substitutions:
+  number: 1
+
+binary_sensor:
+  # Добавляем поведение датчику света — при срабатывании включается светодиод
+  - id: !extend binary_sensor_lightdetector_${number}
+    on_press:
+      then:
+        - output.turn_on: output_led_${number}
+    on_release:
+      then:
+        - output.turn_off: output_led_${number}

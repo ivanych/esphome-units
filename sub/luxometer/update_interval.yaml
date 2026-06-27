@@ -1,0 +1,35 @@
+# Интервал обновления люксметра
+#
+# Управляемые объекты:
+#   - Интервал обновления люксметра (number_luxmeter_update_interval)
+# Требует управляемые объекты:
+#   - Люксметр (sensor_luxometer)
+# Параметры:
+#   number (опционально, int):  номер люксметра (1)
+
+substitutions:
+  number: 1
+
+number:
+  - platform: template
+    name: "Luxometer ${number} Update Interval"
+    id: number_luxometer_update_interval_${number}
+    icon: mdi:update
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "s"
+    device_class: duration
+    min_value: 1
+    max_value: 86400 # сутки
+    step: 1.0
+    initial_value: 60
+    on_value:
+      then:
+        # Это прямые вызовы методов класса PollingComponent.
+        # Нет уверенности, что это надёжно и не изменится в будущем...
+        # Вызов start_poller() нужен для того, чтобы перезапустить опрос
+        # с новым интервалом — иначе эффекта не будет.
+        # Интервал обновления люксметра (сырые данные)
+        - lambda: |
+            id(sensor_luxometer_${number}).set_update_interval(x*1000);
+            id(sensor_luxometer_${number}).start_poller();

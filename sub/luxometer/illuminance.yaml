@@ -1,0 +1,105 @@
+# Калиброованная шкала освещённости люксметра
+#
+# Управляемые объекты:
+#   - Люксметр сырой минимум          (number_luxometer_raw_min)
+#   - Люксметр сырой максимум         (number_luxometer_raw_max)
+#   - Люксметр калиброванный минимум  (number_luxometer_calibrated_min)
+#   - Люксметр калиброванный максимум (number_luxometer_calibrated_max)
+# Требует управляемые объекты:
+#   - Люксметр                      (sensor_luxometer)
+#   - Интервал обновления люксметра (number_luxometer_update_interval)
+# Параметры:
+#   number (опционально, int):  номер люксметра (1)
+
+substitutions:
+  number: 1
+
+number:
+  - platform: template
+    name: "Illuminance ${number} Raw Min"
+    id: number_illuminance_raw_min_${number}
+    icon: mdi:arrow-expand-down
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "V"
+    min_value: 0
+    max_value: 3.3
+    step: 0.01
+    initial_value: 0.0
+
+  - platform: template
+    name: "Illuminance ${number} Raw Max"
+    id: number_illuminance_raw_max_${number}
+    icon: mdi:arrow-expand-up
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "V"
+    min_value: 0
+    max_value: 3.3
+    step: 0.01
+    initial_value: 3.3
+
+  - platform: template
+    name: "Illuminance ${number} Calibrated Min"
+    id: number_illuminance_calibrated_min_${number}
+    icon: mdi:arrow-collapse-down
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 0.01
+    initial_value: 0.0
+
+  - platform: template
+    name: "Illuminance ${number} Calibrated Max"
+    id: number_illuminance_calibrated_max_${number}
+    icon: mdi:arrow-collapse-up
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 0.01
+    initial_value: 100
+
+  # Добавляем поведение настройке "Интервал обновления люксметра" —
+  #   она также будет изменять интервал обновления шкалы освещённости
+  - id: !extend number_luxometer_update_interval_${number}
+    on_value:
+      then:
+        # Интервал обновления калиброванной шакалы освещённости люксметра
+        - lambda:
+            id(sensor_illuminance_${number}).set_update_interval(x*1000);
+            id(sensor_illuminance_${number}).start_poller();
+
+sensor:
+  - platform: template
+    name: "Illuminance ${number}"
+    id: sensor_illuminance_${number}
+    unit_of_measurement: "%"
+    device_class: illuminance
+    #update_interval: 60s
+    # Двухточечная калибровка (замена фильтра calibrate_linear)
+    lambda: |-
+      float x = id(sensor_luxometer_${number}).state;
+
+      // Сырые значения
+      float x1 = id(number_illuminance_raw_min_${number}).state;
+      float x2 = id(number_illuminance_raw_max_${number}).state;
+
+      // Калиброванные значения
+      float y1 = id(number_illuminance_calibrated_min_${number}).state;
+      float y2 = id(number_illuminance_calibrated_max_${number}).state;
+
+      // Защита от деления на ноль, если сырые значения одинаковые
+      if (abs(x2 - x1) < 0.0001) {
+        return 0.0;
+      }
+
+      // Решение линейного уравнения (y = kx + b)
+      float k = (y2 - y1) / (x2 - x1);
+      float b = y1 - k * x1;
+      float y = k * x + b;
+
+      return y;
