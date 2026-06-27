@@ -1,0 +1,25 @@
+# Отладочная кнопка датчика света
+#
+# Управляемые объекты:
+#   - нет
+# Требует управляемые объекты:
+#   - Датчик света  (binary_sensor_lightdetector)
+#   - Кнопка        (binary_sensor_button)
+# Параметры:
+#   number (опционально, int):  номер датчика света (1)
+
+substitutions:
+  number: 1
+
+binary_sensor:
+  # Добавляем поведение кнопке
+  - id: !extend binary_sensor_button_${number}
+    # Нажатие кнопки эмулирует срабатывание датчика света
+    on_press:
+      then:
+        - lambda: id(binary_sensor_lightdetector_${number}).publish_state(true);
+    on_release:
+      then:
+        - lambda: id(binary_sensor_lightdetector_${number}).publish_state(false);
+    # Отладочная кнопка не показывается в HA
+    internal: true

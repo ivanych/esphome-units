@@ -1,0 +1,22 @@
+# LightDetector1
+# Датчик света со светодиодом, отладочной кнопкой и люксметром
+
+substitutions:
+  friendly_unit_name: "LightDetector1"
+
+packages:
+  # датчик света со светодиодом
+  sub: !include
+    file: sub/lightdetector_with_led.yaml
+
+  # отладочная кнопка датчика света
+  but: !include
+    file: sub/lightdetector/test_button.yaml
+
+  # интервал обновления люксметра
+  upd: !include
+    file: sub/luxometer/update_interval.yaml
+
+  # калиброванная шкала освещённости люксметра
+  ill: !include
+    file: sub/luxometer/illuminance.yaml
