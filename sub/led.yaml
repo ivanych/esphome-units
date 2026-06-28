@@ -1,0 +1,16 @@
+# Светодиод
+#
+# Управляемые объекты:
+#   - Переключатель светодиода  (light_led)
+# Требует управляемые объекты:
+#   - Cветодиод                 (output_led)
+
+substitutions:
+  number: 1
+
+light:
+  # Переключатель светодиода
+  - platform: binary
+    name: "Test ${number}"
+    id: light_led_${number}
+    output: output_led_${number}
