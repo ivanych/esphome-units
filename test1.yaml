@@ -1,0 +1,14 @@
+# Test1
+# Светодиод с кнопкой
+
+substitutions:
+  friendly_unit_name: "Test1"
+
+packages:
+  # Светодиод
+  led: !include
+    file: sub/led.yaml
+
+  # Кнопка светодиода
+  but: !include
+    file: sub/led/button.yaml
